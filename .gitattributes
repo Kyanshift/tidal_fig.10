@@ -1,0 +1,9 @@
+# Preserve scientific originals, archived evidence and vendor source byte-for-byte.
+references/** -text
+legacy/** -text
+data/raw/** -text
+vendor/** -text
+artifacts/** -text
+docs/provenance/** -text
+docs/reference/REOUND_web.md -text
+results/examples/** -text

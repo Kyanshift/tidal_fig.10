@@ -1,0 +1,69 @@
+schema_version: 1
+experiment:
+  name: fig10_arxiv_text_comparison
+  kind: reproduction
+  dataset_type: scientific
+system:
+  name: K2-261 b
+  host_epic_id: '201498078'
+  historical_paper_label: K2-161b
+seed: 261001
+units:
+  length: au
+  mass: Msun
+  time: yr
+model:
+  implementation: not_implemented
+  reference_equations: jackson2009_1_2
+  tides:
+    prescription: null
+    q_prime_star: 100000
+    q_prime_planet: 30000
+    quality_factor_convention: jackson2009_modified
+    mapping_status: provisional_arxiv_text_denominators_not_figure_inputs
+    k2_star: null
+    k2_planet: null
+    spin_star: null
+    spin_planet: null
+    constant_time_lag_mapping: null
+  stellar_radius:
+    mode: evolving_track
+    track: data/raw/stellar_tracks/CL002_14_Rs.txt
+    provenance_status: unverified_original_track
+initial_conditions:
+  epoch: present_observed_state
+  stellar_age_Gyr: 8.51
+  star_mass_Msun: 1.104
+  star_radius_Rsun: 1.669
+  planet_mass_Mjup: 0.179
+  planet_radius_Rjup: 0.84
+  a_au: 0.10376
+  e: 0.42
+  mean_anomaly_rad: null
+  node_longitude_rad: null
+  note: Published table initial state with arXiv v1 text denominators; not a reconstruction
+    of the preprint figure.
+integration:
+  integrator: null
+  direction: forward
+  time_origin: elapsed_years_from_present_observed_state
+  end_time_year: null
+  output_interval_year: null
+  convergence_tolerance: null
+acceptance:
+  numerical_fig10_tolerance: null
+  physical_mapping_verified: false
+  record_only_until_model_is_implemented: true
+inputs:
+- configs/parameters/paper_truth.yaml
+- data/raw/stellar_tracks/CL002_14_Rs.txt
+- artifacts/reboundx-msvc.patch
+- artifacts/reboundx-upstream-commit.json
+- legacy/tidal/tidal.py
+- docs/science/tidal_quality_factors.md
+notes:
+- Allocate separate runs/configurations for forward and backward integrations.
+- Approximate paper narrative checks are not exact simulation targets.
+- Published table initial state with arXiv v1 text denominators; not a reconstruction
+  of the preprint figure.
+- Record only; no verified physical simulation has been completed.

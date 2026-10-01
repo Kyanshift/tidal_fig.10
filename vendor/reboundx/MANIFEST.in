@@ -1,0 +1,6 @@
+include README.rst
+include LICENSE
+include UPSTREAM_COMMIT
+recursive-include src *.h
+recursive-include src *.c
+include reboundx/reboundx.h

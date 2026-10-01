@@ -1,0 +1,32 @@
+{
+  "source": "references\\papers\\brahm2018\\published.pdf",
+  "source_sha256": "79e01d3c5947dffd15815373c08af3d6a18dea986d3c9b180760b14c0ddc8e95",
+  "page_one_based": 8,
+  "dpi": 300,
+  "crop_points": [
+    54.198,
+    352.557,
+    278.632,
+    624.837
+  ],
+  "x_axis_pixels": [
+    87.5,
+    925.5
+  ],
+  "age_axis_Gyr": [
+    0.1,
+    10.0
+  ],
+  "e_axis_pixels": [
+    8.0,
+    510.0
+  ],
+  "a_axis_pixels": [
+    566.0,
+    1068.0
+  ],
+  "method": "colour_mask_median_published_raster_central_lines",
+  "uncertainty": "approximate_pixels_not_original_numerical_data; x-window broadens steep endpoint",
+  "comparison_domain": "0.2_to_9.6_Gyr; quantitative_acceptance_to_9.2_Gyr; endpoint_visual_only",
+  "missing_points": "colour_occlusion_or_dashed_gap_omitted_not_interpolated"
+}

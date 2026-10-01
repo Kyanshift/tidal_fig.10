@@ -1,0 +1,2 @@
+# Only the experiment recorder dependency; no replacement of the scientific DLLs.
+PyYAML==6.0.3

@@ -1,0 +1,23 @@
+schema_version: 1
+path: data/raw/stellar_tracks/CL002_14_Rs.txt
+source_path: legacy/tidal/CL002_14_Rs.txt
+sha256: ed9baecbb794fe955f17c0d8b72050a4c8592cd9bfaf17996861153bd51fd501
+bytes: 44050
+row_count: 881
+columns:
+- name: stellar_age
+  unit: Gyr
+- name: stellar_radius
+  unit: Rsun
+column_definition_status: inferred_from_legacy_code_not_original_file_header
+age_range_Gyr:
+- 1.0
+- 9.800000000000008
+radius_range_Rsun:
+- 1.0123635281279042
+- 32.456612065715184
+source_provenance: unverified_original_YY_track_parameters
+legacy_interpolation: piecewise_linear_with_endpoint_clamping
+new_model_interpolation_policy: null
+note: The copied bytes are unchanged; interpolation/extrapolation decisions belong
+  in model configuration.

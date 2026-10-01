@@ -1,0 +1,350 @@
+--- a/MANIFEST.in
++++ b/MANIFEST.in
+@@ -1,5 +1,6 @@
+ include README.rst
+ include LICENSE
++include UPSTREAM_COMMIT
+ recursive-include src *.h
+ recursive-include src *.c
+ include reboundx/reboundx.h
+--- a/reboundx/__init__.py
++++ b/reboundx/__init__.py
+@@ -13,6 +13,10 @@
+ pymodulespath = os.path.abspath(os.path.join(pymodulespath, os.pardir))
+ __libpath__ = os.path.join(pymodulespath, "libreboundx"+suffix)
+ from ctypes import *
++# Keep the Windows DLL search directory alive for the dependent REBOUND .pyd.
++if os.name == "nt":
++    import rebound
++    _dll_directory = os.add_dll_directory(os.path.dirname(rebound.clibrebound._name))
+ clibreboundx = cdll.LoadLibrary(__libpath__)
+ 
+ # Version
+--- a/reboundx/tests/test_simulationarchive.py
++++ b/reboundx/tests/test_simulationarchive.py
+@@ -52,6 +52,7 @@
+                 sim, rebx = sa[0]
+                 sim.integrate(tmax)
+                 self.assertEqual(self.sim.particles[1].x, sim.particles[1].x, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
++                del sa  # Release the file handle before the next Windows overwrite.
+ 
+     def test_pre(self):
+         for integrator in integrators:
+@@ -85,6 +86,7 @@
+                 sim, rebx = sa[0]
+                 sim.integrate(tmax)
+                 self.assertEqual(self.sim.particles[1].x, sim.particles[1].x, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
++                del sa  # Release the file handle before the next Windows overwrite.
+ 
+     def test_post(self):
+         for integrator in integrators:
+@@ -118,6 +120,7 @@
+                 sim, rebx = sa[0]
+                 sim.integrate(tmax)
+                 self.assertEqual(self.sim.particles[1].x, sim.particles[1].x, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
++                del sa  # Release the file handle before the next Windows overwrite.
+ 
+     def test_2ndorder(self):
+         for integrator in integrators:
+@@ -151,7 +154,7 @@
+                 sim, rebx = sa[0]
+                 sim.integrate(tmax)
+                 self.assertEqual(self.sim.particles[1].x, sim.particles[1].x, msg='REB integrator: {0}, REBX integrator: {1}'.format(integrator, rebxintegrator))
++                del sa  # Release the file handle before the next Windows overwrite.
+ 
+ if __name__ == '__main__':
+     unittest.main()
+-
+--- a/setup.py
++++ b/setup.py
+@@ -4,6 +4,9 @@
+ import sys 
+ from glob import glob
+ import sysconfig
++import re
++import subprocess
++from pathlib import Path
+ from setuptools import setup, Extension
+ from setuptools.command.build_ext import build_ext as _build_ext
+ 
+@@ -32,10 +35,13 @@
+ if suffix is None:
+     suffix = ".so"
+ 
+-# Try to get git hash
++# An archive has no .git directory; avoid recording the enclosing project's hash.
++upstream_commit = Path(__file__).with_name("UPSTREAM_COMMIT")
+ try:
+-    import subprocess
+-    ghash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii")
++    if upstream_commit.exists():
++        ghash = upstream_commit.read_text(encoding="ascii").strip()
++    else:
++        ghash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii")
+     ghash_arg = "-DREBXGITHASH="+ghash.strip()
+ except:
+     ghash_arg = "-DREBXGITHASH=6253cea575af12b85392baaacd3688045702a5b2" #GITHASHAUTOUPDATE
+@@ -43,6 +49,8 @@
+ class build_ext(_build_ext):
+     def finalize_options(self):
+         _build_ext.finalize_options(self)
++        if os.environ.get("REBX_FORCE_BUILD") == "1":
++            self.force = True
+         if "PYODIDE" in os.environ:
+             return None
+        
+@@ -58,6 +66,10 @@
+         
+         self.library_dirs.append(rebdir+'/../')
+         self.library_dirs.append(sitepackagesdir)
++        if sys.platform == 'win32':
++            if editable_rebdir:
++                self.include_dirs.append(os.path.join(editable_rebdir, "src"))
++            return
+         for ext in self.extensions:
+             ext.runtime_library_dirs.append(rebdir+'/../')
+             ext.extra_link_args.append('-Wl,-rpath,'+rebdir+'/../')
+@@ -69,6 +81,47 @@
+                 ext.runtime_library_dirs.append(editable_rebdir)
+                 ext.extra_link_args.append('-Wl,-rpath,'+editable_rebdir)
+ 
++    def build_extensions(self):
++        if sys.platform == 'win32':
++            if self.compiler.compiler_type != 'msvc':
++                raise RuntimeError("This local Windows adaptation requires MSVC.")
++            self._prepare_rebound_import_library()
++        super().build_extensions()
++
++    def _prepare_rebound_import_library(self):
++        """Generate an import library for the exact REBOUND DLL in this venv."""
++        import rebound
++        if not self.compiler.initialized:
++            self.compiler.initialize()
++        dll = Path(rebound.clibrebound._name).resolve()
++        dumpbin = Path(self.compiler.linker).with_name("dumpbin.exe")
++        output = subprocess.check_output([str(dumpbin), "/nologo", "/exports", str(dll)], text=True, errors="replace")
++        symbols = re.findall(r"^\s+\d+\s+[0-9A-Fa-f]+\s+[0-9A-Fa-f]+\s+(reb_\w+)\b", output, re.MULTILINE)
++        if not symbols:
++            raise RuntimeError("No REBOUND exports found in " + str(dll))
++        directory = Path(self.build_temp).resolve() / "rebound-import"
++        directory.mkdir(parents=True, exist_ok=True)
++        definition = directory / "rebound.def"
++        definition.write_text('LIBRARY "' + dll.name + '"\nEXPORTS\n' + '\n'.join(symbols) + '\n', encoding="ascii")
++        library = directory / "rebound.lib"
++        machine = {"win-amd64": "X64", "win32": "X86", "win-arm64": "ARM64"}[self.plat_name]
++        subprocess.check_call([self.compiler.lib, "/nologo", "/def:" + str(definition), "/machine:" + machine, "/out:" + str(library)])
++        for ext in self.extensions:
++            ext.libraries = []
++            ext.extra_objects = [str(library)]
++
++    def get_export_symbols(self, ext):
++        if sys.platform != 'win32':
++            return super().get_export_symbols(ext)
++        # This is a ctypes library; export C functions and data, without PyInit_*.
++        symbols = set()
++        for source in ext.sources:
++            contents = Path(source).read_text(encoding="utf-8")
++            contents = re.sub(r"/\*.*?\*/|//[^\n]*", "", contents, flags=re.DOTALL)
++            symbols.update(re.findall(r"^(?!static\b)[\w *\t]+\b(rebx_\w+)\s*\([^;{}]*\)\s*\{", contents, re.MULTILINE))
++        symbols.update(name + ",DATA" for name in ("rebx_build_str", "rebx_version_str", "rebx_githash_str"))
++        return sorted(symbols)
++
+ 
+ extra_link_args=[]
+ if sys.platform == 'darwin':
+@@ -76,7 +129,7 @@
+     config_vars['LDSHARED'] = config_vars['LDSHARED'].replace('-bundle', '-shared')
+     extra_link_args.append('-Wl,-install_name,@rpath/libreboundx'+suffix)
+ if sys.platform == 'win32':
+-    extra_compile_args=[ghash_arg, '-D_GNU_SOURCE']
++    extra_compile_args=[ghash_arg, '/std:c11', '/fp:precise', '/D_CRT_SECURE_NO_WARNINGS']
+ else:
+     # Default compile args
+     extra_compile_args=['-fstrict-aliasing', '-O3','-std=c99','-Wno-unknown-pragmas', ghash_arg, '-D_GNU_SOURCE', '-fPIC']
+@@ -84,7 +137,7 @@
+ # Option to disable FMA in CLANG. 
+ FFP_CONTRACT_OFF = os.environ.get("FFP_CONTRACT_OFF", None)
+ if FFP_CONTRACT_OFF:
+-    extra_compile_args.append('-ffp-contract=off')
++    extra_compile_args.append('/fp:strict' if sys.platform == 'win32' else '-ffp-contract=off')
+ 
+ libreboundxmodule = Extension(
+     'libreboundx',
+--- a/src/gr_full.c
++++ b/src/gr_full.c
+@@ -60,8 +60,20 @@
+ 
+ static void rebx_calculate_gr_full(struct reb_simulation* const sim, struct reb_particle* const particles, const int N, const double C2, const double G, const int max_iterations, const int gravity_ignore_10){
+     
+-    double a_const[N][3]; // array that stores the value of the constant term
++    if (N <= 0){
++        return;
++    }
++    // MSVC does not support C99 variable-length arrays.
++    double (*a_const)[3] = malloc((size_t)N*sizeof(*a_const));
++    double (*a_old)[3] = malloc((size_t)N*sizeof(*a_old));
+     struct reb_particle* const ps_b = malloc(N*sizeof(*ps_b));
++    if (a_const == NULL || a_old == NULL || ps_b == NULL){
++        free(a_const);
++        free(a_old);
++        free(ps_b);
++        reb_simulation_error(sim, "REBOUNDx Error: Could not allocate gr_full workspace.\n");
++        return;
++    }
+     memcpy(ps_b, particles, N*sizeof(*ps_b));
+ 
+     // Calculate Newtonian accelerations 
+@@ -182,7 +194,7 @@
+ 
+     // Now running the substitution again and again through the loop below
+     for (int k=0; k<10; k++){ // you can set k as how many substitution you want to make
+-        double a_old[N][3]; // initialize an arry that stores the information of previousu calculated accleration
++        // Reuse the workspace for the previous iteration's acceleration.
+         for (int i =0; i <N; i++){
+             a_old[i][0] = ps_b[i].ax;
+             a_old[i][1] = ps_b[i].ay;
+@@ -241,6 +253,8 @@
+     }
+     
+     free(ps_b);
++    free(a_old);
++    free(a_const);
+ 
+ }
+ 
+--- a/src/interpolation.c
++++ b/src/interpolation.c
+@@ -63,8 +63,12 @@
+  * 
+  * Adapted from "Numerical Recipes for C," 2nd Ed., §3.3, p. 115.
+  */
+-static void rebx_spline(const double* x, const double* y, const int n, double* y2) {
+-    double p, qn, sig, un, u[n];
++static void rebx_spline(struct rebx_extras* const rebx, const double* x, const double* y, const int n, double* y2) {
++    double p, qn, sig, un;
++    double* u = rebx_malloc(rebx, (size_t)n*sizeof(*u));
++    if (u == NULL){
++        return;
++    }
+ 
+     y2[0] = 0.;
+     u[0] = 0.0; // lower boundary condition is set to "natural"
+@@ -82,6 +86,7 @@
+     y2[n-1] = (un - qn*u[n-2]) / (qn * y2[n-2] + 1.);
+     for (int k=n-2; k>=0; k--) // backsubstitution loop of tridiagonal alg.
+         y2[k] = y2[k] * y2[k+1] + u[k];
++    free(u);
+ }
+ 
+ /**
+@@ -140,7 +145,7 @@
+     interp->klo = 0;
+     if (interpolation == REBX_INTERPOLATION_SPLINE){
+         interp->y2 = rebx_malloc(rebx, Nvalues*sizeof(*interp->y2));
+-        rebx_spline(interp->times, interp->values, interp->Nvalues, interp->y2);
++        rebx_spline(rebx, interp->times, interp->values, interp->Nvalues, interp->y2);
+     }
+     return;
+ }
+--- a/src/steppers.c
++++ b/src/steppers.c
+@@ -53,6 +53,14 @@
+ #include "integrator_ias15.h"
+ #include "reboundx.h"
+ 
++// Obtain callbacks and a fresh state through the public API. The built-in
++// integrator data objects themselves are not exported by Windows REBOUND.
++static struct reb_integrator_configuration rebx_step_integrator(const char* name){
++    struct reb_simulation selector = {0};
++    reb_simulation_set_integrator(&selector, name);
++    return selector.integrator;
++}
++
+ // will do IAS with gravity + any additional_forces
+ 
+ void rebx_ias15_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
+@@ -61,49 +69,53 @@
+     const double old_dt = sim->dt;
+     sim->gravity_ignore_terms = 0;
+ 
+-    struct reb_integrator_ias15_state* ias15 = reb_integrator_ias15.create();
++    const struct reb_integrator_configuration step_integrator = rebx_step_integrator("ias15");
++    struct reb_integrator_ias15_state* ias15 = step_integrator.state;
+     
+     sim->dt = 0.0001*dt; // start with a small timestep.
+     
+     while(sim->t < t_needed && fabs(sim->dt/old_dt)>1e-14 ){
+-        reb_integrator_ias15.step(sim, ias15);
++        step_integrator.callbacks.step(sim, ias15);
+         if (sim->t+sim->dt > t_needed){
+             sim->dt = t_needed-sim->t;
+         }
+     }
+-    reb_integrator_ias15.free(ias15);
++    step_integrator.callbacks.free(ias15);
+     sim->t = old_t;
+     sim->dt = old_dt; // reset in case this is part of a chain of steps
+ }
+ 
+ void rebx_kepler_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
+-    struct reb_integrator_whfast_state* whfast = reb_integrator_whfast.create();
++    const struct reb_integrator_configuration step_integrator = rebx_step_integrator("whfast");
++    struct reb_integrator_whfast_state* whfast = step_integrator.state;
+     reb_integrator_whfast_init(sim, whfast);
+     reb_integrator_whfast_from_inertial(sim, whfast->p_jh, whfast->coordinates);
+     reb_integrator_whfast_kepler_step(sim, whfast->p_jh, whfast->coordinates, dt);
+     reb_integrator_whfast_com_step(sim, whfast->p_jh, dt);
+     reb_integrator_whfast_to_inertial(sim, whfast->p_jh, whfast->coordinates);
+-    reb_integrator_whfast.free(whfast);
++    step_integrator.callbacks.free(whfast);
+ }
+ 
+ void rebx_jump_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
+     // TODO: This will never do anything because by default whfast coordinates are Jacobi which do not have a jump step.
+-    struct reb_integrator_whfast_state* whfast = reb_integrator_whfast.create();
++    const struct reb_integrator_configuration step_integrator = rebx_step_integrator("whfast");
++    struct reb_integrator_whfast_state* whfast = step_integrator.state;
+     reb_integrator_whfast_init(sim, whfast);
+     reb_integrator_whfast_from_inertial(sim, whfast->p_jh, whfast->coordinates);
+     reb_integrator_whfast_jump_step(sim, whfast, dt);
+     reb_integrator_whfast_to_inertial(sim, whfast->p_jh, whfast->coordinates);
+-    reb_integrator_whfast.free(whfast);
++    step_integrator.callbacks.free(whfast);
+ }
+ 
+ void rebx_interaction_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
+-    struct reb_integrator_whfast_state* whfast = reb_integrator_whfast.create();
++    const struct reb_integrator_configuration step_integrator = rebx_step_integrator("whfast");
++    struct reb_integrator_whfast_state* whfast = step_integrator.state;
+     reb_integrator_whfast_init(sim, whfast);
+     reb_integrator_whfast_from_inertial(sim, whfast->p_jh, whfast->coordinates);
+     reb_simulation_update_acceleration(sim);
+     reb_integrator_whfast_interaction_step(sim, whfast->p_jh, whfast->coordinates, dt);
+     reb_integrator_whfast_to_inertial(sim, whfast->p_jh, whfast->coordinates);
+-    reb_integrator_whfast.free(whfast);
++    step_integrator.callbacks.free(whfast);
+ }
+ 
+ void rebx_drift_step(struct reb_simulation* const sim, struct rebx_operator* const operator, const double dt){
+--- a/src/stochastic_forces.c
++++ b/src/stochastic_forces.c
+@@ -65,8 +65,8 @@
+ static void rebx_random_normal2(struct reb_simulation* r, double* n0, double* n1){
+ 	double v1,v2,rsq=1.;
+ 	while(rsq>=1. || rsq<1.0e-12){
+-		v1=2.*((double)rand_r(&(r->rand_seed)))/((double)(RAND_MAX))-1.0;
+-		v2=2.*((double)rand_r(&(r->rand_seed)))/((double)(RAND_MAX))-1.0;
++		v1=reb_random_uniform(r, -1., 1.);
++		v2=reb_random_uniform(r, -1., 1.);
+ 		rsq=v1*v1+v2*v2;
+ 	}
+ 	*n0 = v1*sqrt(-2.*log(rsq)/rsq);
+@@ -249,4 +249,3 @@
+         }
+     }
+ }
+-
+--- /dev/null
++++ b/UPSTREAM_COMMIT
+@@ -0,0 +1 @@
++e884547a9d9790dd4779a9c129b72da8225ff67a

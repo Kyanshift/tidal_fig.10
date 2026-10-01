@@ -1,0 +1,126 @@
+schema_version: 1
+experiment:
+  name: reboundx_ctl_local_mapping_probe
+  kind: reproduction
+  dataset_type: scientific
+system:
+  name: K2-261 b
+  host_epic_id: '201498078'
+  historical_paper_label: K2-161b
+seed: 261001
+units:
+  length: au
+  mass: Msun
+  time: yr
+model:
+  implementation: reboundx_tides_constant_time_lag_diagnostic
+  reference_equations: jackson2009_1_2
+  tides:
+    prescription: constant_time_lag_local_diagnostic
+    q_prime_star: 1000000
+    q_prime_planet: 32000
+    quality_factor_convention: jackson2009_modified
+    mapping_status: local_low_e_rate_calibration_not_global_equivalence
+    k2_star: 0.028
+    k2_planet: 0.37
+    spin_star: 0.0
+    spin_planet: 427.87095033096796
+    constant_time_lag_mapping: 'star circular da: k2*n*tau=3/(4Qprime); planet low-e
+      pseudosynchronous de: k2*n*tau=3/(2Qprime); finite-mass difference retained'
+  stellar_radius:
+    mode: frozen_track_epoch_diagnostic
+    track: data/raw/stellar_tracks/CL002_14_Rs.txt
+    provenance_status: unverified_original_track
+    interpolation: piecewise_linear
+    boundary_policy: endpoint_clamp_legacy_comparison
+    normalization: use_track_directly_no_epoch_rescaling
+  roche_coefficient: 2.7
+  orbital_elements: orbit_averaged
+  approximation: Jackson2009_e2_slow_star_spin_no_external_perturbers
+initial_conditions:
+  epoch: present_observed_state
+  stellar_age_Gyr: 8.51
+  star_mass_Msun: 1.101
+  star_radius_Rsun: 1.669
+  planet_mass_Mjup: 0.179
+  planet_radius_Rjup: 0.84
+  a_au: 0.10376
+  e: 0.42
+  mean_anomaly_rad: 0.0
+  node_longitude_rad: 0.0
+  note: Historical nominal state; star mass is a legacy constant, not the adopted
+    Table 2 observation. No ensemble reconstructed.
+integration:
+  integrator: ias15
+  direction: forward
+  time_origin: elapsed_years_from_present_observed_state
+  end_time_year: 2.0398729713101442
+  output_interval_year: 0.031873015176721003
+  convergence_tolerance: null
+  max_step_year: 0.031873015176721003
+  tolerance: 1.0e-10
+  event_tolerance_year: 10.0
+  events:
+    engulfment: terminate_forward_q_le_Rstar
+    roche: annotate_continue_idealized_paper_model
+    elliptic_domain: fail_e_not_in_0_1_or_a_nonpositive
+    track_boundary: clamp_annotate_in_analysis
+acceptance:
+  numerical_fig10_tolerance:
+    e_absolute: 0.006
+    a_au_absolute: 0.0015
+    pericentre_au_absolute: 0.0015
+    roche_limit_au_absolute: 0.0015
+    stellar_radius_au_absolute: 0.0015
+    status: proposed_before_new_curve_comparison_based_on_render_resolution
+  physical_mapping_verified: false
+  record_only_until_model_is_implemented: false
+inputs:
+- configs/parameters/paper_truth.yaml
+- data/raw/stellar_tracks/CL002_14_Rs.txt
+- artifacts/reboundx-msvc.patch
+- artifacts/reboundx-upstream-commit.json
+- legacy/tidal/tidal.py
+- docs/science/tidal_quality_factors.md
+- references/papers/brahm2018/published.pdf
+- references/papers/theory/jackson2009.pdf
+- vendor/reboundx/src/tides_constant_time_lag.c
+notes:
+- Deterministic centre only; no joint posterior recovered.
+- High eccentricity is extrapolation of truncated Jackson equations.
+- Roche crossing is not a hydrodynamic disruption calculation.
+- a/e ODE with zero N-body particles; time is elapsed 365-day years.
+- Historical mass 1.101 Msun deliberately separate from paper Table2 1.104 Msun.
+constants:
+  G_SI: 6.6743e-11
+  au_m: 149597870700.0
+  Msun_kg: 1.988409870698051e+30
+  Mjup_kg: 1.8981245973360505e+27
+  Rsun_m: 695700000.0
+  Rjup_m: 71492000.0
+  year_seconds: 31536000.0
+  provenance: explicit_modern_IAU_nominal_values_G_CODATA2018_year365_legacy; historical_astropy_version_unknown
+diagnostic:
+  love_numbers:
+  - 0.028
+  - 0.37
+  love_number_source: diagnostic_assumptions_not_target_measurements
+  lags_year:
+  - 1.3587717633798607e-07
+  - 6.426623205175018e-07
+  lag_calibration: 'star circular da: k2*n*tau=3/(4Qprime); planet low-e pseudosynchronous
+    de: k2*n*tau=3/(2Qprime); finite-mass difference retained'
+  spin_star: zero_aligned_fixed
+  spin_planet: Hut_pseudosynchronous_aligned_fixed_at_initial_e
+  eccentricity_grid:
+  - 0.01
+  - 0.42
+  - 0.85
+  amplifications:
+  - 10000.0
+  - 100000.0
+  periods: 64
+  phase_convention: coplanar_z; all_angles_zero; initial_periapsis
+  radius_policy: frozen_track_radius_at_observed_epoch
+  normalization: Gyr_curves_not_generated_by_this_probe
+  wall_budget_seconds: 60

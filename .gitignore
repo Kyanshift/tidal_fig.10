@@ -1,0 +1,46 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Python caches and build artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Local secrets and operating system files
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+
+# Real scientific runs stay local; small, clearly synthetic examples are tracked.
+results/reproductions/run_*/
+results/reproductions/fig10_stage*/
+results/sweeps/run_*/
+results/architectures/run_*/
+data/processed/
+tmp/
+*.tmp
+.write.lock
+
+# Local native builds and wheels (source patches remain tracked).
+*.pyd
+*.dll
+*.obj
+*.lib
+*.exp
+*.whl
+
+AGENTS.md
+AGENT.md
+.agents/
+.codex/

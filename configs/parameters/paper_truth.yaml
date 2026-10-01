@@ -1,0 +1,287 @@
+# 论文报告值基准：不是无误差的物理真值。日期采用用户所在时区。
+schema_version: 1
+reviewed_on: '2026-10-01'
+authority: published_brahm_sty3230
+scope: dynamical_and_tidal_parameters_needed_for_fig10
+identity:
+  project_target: K2-261 b
+  host_epic_id: '201498078'
+  historical_paper_label: K2-161b
+  arxiv_label: EPIC 201498078b
+  naming_policy: Use EPIC 201498078 as identity anchor; the historical paper label is not a universal catalogue alias.
+  modern_name_source: user_confirmed_project_scope
+sources:
+  published_brahm_sty3230:
+    path: references/papers/brahm2018/published.pdf
+    doi: 10.1093/mnras/sty3230
+    title: 'K2-161b: a low-density super-Neptune on an eccentric orbit'
+    online_publication_date: '2018-11-29'
+    volume_year: 2019
+    journal: MNRAS 483, 1970-1979
+    verification: text_extraction_and_visual_review_of_tables_2_3_section_4_2_fig10
+  brahm_arxiv_v1:
+    path: references/papers/brahm2018/arxiv-v1/main.tex
+    url: https://arxiv.org/abs/1806.04073v1
+    status: historical_comparison_only
+  legacy_tidal:
+    path: legacy/tidal/tidal.py
+    status: historical_code_author_provenance_unverified
+  jackson2008_normalization:
+    path: docs/reference/jackson2008_normalization.md
+    url: https://faculty.washington.edu/rkb9/publications/jgb08a.pdf
+    doi: 10.1086/529221
+    locator: 'Section 2.1; PDF page 2, journal page 1397'
+    verification: online_primary_text_checked_2026_10_01
+  jackson2009:
+    path: references/papers/theory/jackson2009.pdf
+    doi: 10.1088/0004-637X/698/2/1357
+    title: Evidence for Tidal Destruction of Exoplanets
+    locator: 'Section 2; equations (1), (2); PDF pages 2 and 4'
+  penev2018:
+    path: references/papers/theory/penev2018.pdf
+    doi: 10.3847/1538-3881/aaaf71
+    title: Empirical Tidal Dissipation in Exoplanet Hosts From Tidal Spin-up
+    locator: 'Introduction, PDF page 1'
+  lainey2009:
+    path: references/papers/theory/lainey2009.pdf
+    doi: 10.1038/nature08108
+    title: Strong tidal dissipation in Io and Jupiter from astrometric observations
+
+# 默认优先表 2/3 的未进一步取整报告值；与摘要/正文不同的数值在下方逐项保留。
+adopted_observations:
+  star_mass:
+    value: 1.104
+    unit: Msun
+    uncertainty: {minus: 0.018, plus: 0.020, type: reported_asymmetric}
+    source: published_brahm_sty3230
+    locator: 'Table 2, PDF page 5, journal page 1974'
+  star_radius:
+    value: 1.669
+    unit: Rsun
+    uncertainty: {minus: 0.021, plus: 0.022, type: reported_asymmetric}
+    source: published_brahm_sty3230
+    locator: 'Table 2, PDF page 5'
+  stellar_age:
+    value: 8.51
+    unit: Gyr
+    uncertainty: {minus: 0.48, plus: 0.53, type: reported_asymmetric}
+    source: published_brahm_sty3230
+    locator: 'Table 2, PDF page 5'
+  planet_mass:
+    value: 0.179
+    unit: Mjup
+    uncertainty: {minus: 0.020, plus: 0.020, type: reported_symmetric}
+    source: published_brahm_sty3230
+    locator: 'Table 3, PDF page 6, journal page 1975'
+  planet_radius:
+    value: 0.840
+    unit: Rjup
+    uncertainty: {minus: 0.011, plus: 0.011, type: reported_symmetric}
+    source: published_brahm_sty3230
+    locator: 'Table 3, PDF page 6'
+  semimajor_axis:
+    value: 0.10376
+    unit: au
+    uncertainty: {minus: 0.00051, plus: 0.00043, type: reported_asymmetric}
+    source: published_brahm_sty3230
+    locator: 'Table 3, PDF page 6'
+  eccentricity:
+    value: 0.42
+    unit: dimensionless
+    uncertainty: {minus: 0.03, plus: 0.03, type: reported_symmetric}
+    source: published_brahm_sty3230
+    locator: 'Table 3, PDF page 6'
+  orbital_period:
+    value: 11.63365
+    unit: day
+    uncertainty: {minus: 0.00010, plus: 0.00010, type: reported_symmetric}
+    source: published_brahm_sty3230
+    locator: 'Table 3, PDF page 6'
+  sky_inclination:
+    value: 89.20
+    unit: degree
+    uncertainty: {minus: 0.68, plus: 0.57, type: reported_asymmetric}
+    source: published_brahm_sty3230
+    locator: 'Table 3, PDF page 6; sky plane, not mutual inclination'
+  argument_of_periastron:
+    value: 147.0
+    unit: degree
+    uncertainty: {minus: 6.3, plus: 5.9, type: reported_asymmetric}
+    source: published_brahm_sty3230
+    locator: 'Table 3, PDF page 6; RV convention requires checking before Cartesian initialization'
+  effective_temperature:
+    value: 5513
+    unit: K
+    uncertainty: {minus: 51, plus: 51, type: reported_symmetric}
+    source: published_brahm_sty3230
+    locator: 'Table 2, PDF page 5'
+  metallicity:
+    value: 0.26
+    unit: dex
+    uncertainty: {minus: 0.03, plus: 0.03, type: reported_symmetric}
+    source: published_brahm_sty3230
+    locator: 'Table 2, PDF page 5, [Fe/H]'
+
+reported_model_assumptions:
+  stellar_tidal_quality_factor:
+    value: 1000000
+    unit: dimensionless
+    printed_symbol: Q_star
+    uncertainty: null
+    kind: assumed_not_measured
+    source: published_brahm_sty3230
+    locator: 'Section 4.2, PDF page 7, journal page 1976'
+    cited_source: penev2018
+  planetary_tidal_quality_factor:
+    value: 30000
+    unit: dimensionless
+    printed_symbol: Q_P
+    uncertainty: null
+    kind: assumed_not_measured
+    source: published_brahm_sty3230
+    locator: 'Section 4.2, PDF page 7'
+    cited_source: lainey2009
+  equations: {source: jackson2009, equation_ids: [1, 2]}
+  stellar_evolution: {model: Yonsei-Yale_interpolated_radius_track, source: published_brahm_sty3230, locator: 'Section 4.2, PDF page 7'}
+
+quality_factor_conventions:
+  jackson2009:
+    symbol: Q_prime
+    definition: modified_tidal_dissipation_parameter
+    verification: explicitly_modified_in_equations_1_2_and_following_text
+    ordinary_Q_conversion: 3 * Q / (2 * k2)
+    normalization_source: jackson2008_normalization
+    note: Normalization checked; transfer across forcing frequencies, bodies and models remains provisional.
+    example_choices_not_universal: {figure_2_q_prime_planet: 3162277.6601683795, section_3_1_q_prime_star: 1000000}
+  penev2018:
+    symbol: Q_prime_star
+    formula_as_printed: Q_star / k2
+    verification: visually_checked_PDF_page_1
+  lainey2009:
+    directly_measured_quantity: k2_over_Q
+    body: Jupiter
+    forcing_context: Io_tidal_excitation
+    value: 0.00001102
+    unit: dimensionless
+    uncertainty: {minus: 0.00000203, plus: 0.00000203, type: reported_formal_1sigma}
+    source: lainey2009
+    locator: 'PDF page 1, journal page 957'
+    ordinary_Q_at_assumed_k2:
+      value: 35600
+      unit: dimensionless
+      uncertainty: {minus: 6600, plus: 6600, type: reported_1sigma}
+      assumed_k2: 0.379
+      source: lainey2009
+      locator: 'PDF page 2, journal page 958'
+    transfer_to_K2_261b: unverified_model_assumption_not_target_measurement
+  operational_fig10_mapping:
+    numerical_denominators: {q_prime_star: 1000000, q_prime_planet: 30000}
+    convention: jackson2009_modified
+    status: provisional_interpretation_of_brahm_not_an_additional_measurement
+    rationale: Brahm invokes Jackson equations but prints unprimed Q; legacy denominators follow Jackson coefficients.
+    ordinary_Q_conversion_enabled: false
+    reboundx_time_lag_conversion_enabled: false
+    unresolved: [brahm_intended_physical_definition, love_numbers, spins, forcing_frequency, constant_Q_vs_constant_time_lag]
+  legacy_fig10_mapping:
+    numerical_denominators: {q_prime_star: 1000000, q_prime_planet: 32000}
+    convention: jackson2009_modified_effective_denominators
+    status: code_denominators_checked_physical_interpretation_provisional
+    source: legacy_tidal
+    locator: 'Qp, Qs; get_ecc_change; get_sma_change'
+    priority: first_nominal_curve_reproduction_candidate
+    heating_only_conversion: 'Qpp = 3*Qp/(2*0.37); used in H0, not orbital derivatives'
+    automatically_convert_denominators: false
+  conditional_definition_comparisons:
+    lainey_to_jackson:
+      q_prime_planet: 136116.15245009074
+      formula: 3 / (2 * k2_over_Q)
+      source: lainey2009
+      kind: derived_Jupiter_central_value_not_K2_261b_measurement
+    legacy_ordinary_Q_hypothesis:
+      q_prime_planet: 129729.72972972973
+      formula: 3 * 32000 / (2 * 0.37)
+      source: legacy_tidal
+      kind: hypothetical_ordinary_Q_interpretation_of_legacy_input
+    penev_to_jackson:
+      q_prime_star: 1500000
+      formula: 1.5 * 1000000
+      source: penev2018
+      kind: conditional_normalization_not_automatic_brahm_correction
+      condition: Same ordinary Q and k2; assumes Brahm number is Penev Q_prime.
+    reboundx_mapping_status: unverified_no_time_lag_conversion
+
+reported_qualitative_checks:
+  past_epoch:
+    stellar_age: {value: 1.0, unit: Gyr}
+    semimajor_axis: {value: 0.175, unit: au}
+    eccentricity: {value: 0.85, unit: dimensionless}
+    pericentre_over_roche: {value: 1.4, unit: dimensionless}
+    kind: approximate_paper_narrative_not_digitized_curve
+    source: published_brahm_sty3230
+    locator: 'Section 4.2, PDF page 7'
+  engulfment_from_present:
+    value: 1.0
+    unit: Gyr
+    kind: approximate_statement_no_numerical_tolerance_defined
+    source: published_brahm_sty3230
+    locator: 'Section 4.2, PDF page 7'
+  figure:
+    id: 10
+    source: published_brahm_sty3230
+    locator: 'PDF page 8, journal page 1977'
+    observables: [eccentricity, semimajor_axis, pericentre, roche_limit, stellar_radius]
+    time_axis: stellar_age_Gyr
+    visual_panels: 2
+    note: Caption calls the second panel middle; rendered figure has two panels.
+
+conflicts:
+  - parameter: star_mass
+    adopted: Table_2
+    alternatives:
+      - {source: published_brahm_sty3230, locator: Abstract, value: 1.105, sigma: 0.019, unit: Msun}
+      - {source: legacy_tidal, locator: 'Ms0,MsE', value: 1.101, sigma: 0.015, unit: Msun}
+  - parameter: planet_mass_uncertainty
+    adopted: Table_3_sigma_0.020_Mjup
+    alternatives:
+      - {source: published_brahm_sty3230, locator: 'Abstract and Section 3.2', sigma: 0.021, unit: Mjup}
+  - parameter: eccentricity_uncertainty
+    adopted: Table_3_sigma_0.03
+    alternatives:
+      - {source: published_brahm_sty3230, locator: Abstract, value: 0.420, sigma: 0.034}
+  - parameter: orbital_period
+    adopted: Table_3_11.63365_day
+    alternatives:
+      - {source: published_brahm_sty3230, locator: Abstract, value: 11.63364, sigma: 0.00010, unit: day}
+  - parameter: stellar_tidal_quality_factor
+    adopted: published_Section_4.2_1000000
+    alternatives:
+      - {source: brahm_arxiv_v1, locator: 'main.tex near Figure tidal1', value: 100000}
+  - parameter: planetary_tidal_quality_factor
+    adopted: published_Section_4.2_30000
+    alternatives:
+      - {source: legacy_tidal, locator: Qp, value: 32000}
+
+legacy_numerics_not_paper_truth:
+  source: legacy_tidal
+  realizations: 500
+  time_step_Gyr: 0.0001
+  age_mean_Gyr: 8.51
+  age_sigma_Gyr: 0.6
+  backward_stop_age_Gyr: 0.1
+  forward_stop_age_Gyr: 9.80
+  roche_coefficient: 2.7
+  year_days: 365
+  algorithm: explicit_Euler
+  random_seed: null
+  stellar_track:
+    original_path: legacy/tidal/CL002_14_Rs.txt
+    reusable_copy: data/raw/stellar_tracks/CL002_14_Rs.txt
+    columns_inferred_from_code: [stellar_age_Gyr, stellar_radius_Rsun]
+    provenance: file_origin_and_exact_YY_track_parameters_unverified
+
+unresolved:
+  - Exact posterior joint samples/covariances used for the grey uncertainty ensemble are unavailable.
+  - Fig10 curves have not been digitized and numerical agreement tolerances are not yet defined.
+  - Brahm physical Q interpretation, cross-body/frequency transfer and mapping to REBOUNDx require validation; algebraic normalization alone does not resolve these.
+  - Node longitude, mean anomaly, extra planets, spin vectors and Love numbers are not established by the baseline.
+  - Stellar track origin and exact isochrone parameters need confirmation.

@@ -1,0 +1,53 @@
+# 扫描设计，尚不是单次运行配置，也不启动模拟。
+schema_version: 1
+design_id: tidal_quality_factors_v2
+status: planned_model_mapping_required
+baseline_config: configs/reproductions/fig10_legacy_denominators.yaml
+scientific_question: How do Q_prime_star and Q_prime_planet change tidal evolution and survival?
+mandatory_factors:
+  - model.tides.q_prime_star
+  - model.tides.q_prime_planet
+convention: jackson2009_modified
+mapping_status: code_denominators_checked_physical_interpretation_provisional
+design:
+  stage_1:
+    method: one_factor_at_a_time
+    values:
+      model.tides.q_prime_star: [100000, 1000000, 10000000]
+      model.tides.q_prime_planet: [3200, 32000, 320000]
+    interpretation: Exploratory decade multipliers around legacy effective denominators; not empirical uncertainty bounds.
+    unique_parameter_combinations: 5
+  stage_2:
+    method: full_factorial
+    values:
+      model.tides.q_prime_star: [100000, 1000000, 10000000]
+      model.tides.q_prime_planet: [3200, 32000, 320000]
+    unique_parameter_combinations: 9
+  randomness:
+    strategy: matched_seed_and_same_sampled_initial_state_across_factor_values
+    pilot_seeds: [261001, 261002, 261003]
+    note: Separate deterministic baseline from uncertain observed-state ensembles.
+secondary_factors:
+  - {name: stellar_radius_evolution, levels: [fixed_present_radius, evolving_track]}
+  - {name: observed_initial_state_uncertainty, range: null, status: sampling_model_and_covariance_pending}
+later_architecture_factors:
+  - {name: companion_masses_and_orbits, range: null}
+  - {name: initial_semimajor_axes_and_eccentricities, range: null}
+  - {name: mutual_inclinations, range: null}
+  - {name: disk_migration_and_eccentricity_damping, range: null}
+  - {name: disk_dispersal_time, range: null}
+outputs:
+  - e_at_present_age
+  - a_at_present_age_au
+  - minimum_pericentre_over_roche
+  - engulfment_elapsed_year
+  - disruption_elapsed_year
+  - termination_reason
+  - numerical_convergence_diagnostics
+budget: {max_wall_time_seconds_per_run: null, max_total_runs: null, status: set_after_short_model_pilot}
+definition_comparisons:
+  configs:
+    - configs/reproductions/fig10_baseline.yaml
+    - configs/reproductions/fig10_arxiv_text.yaml
+    - configs/reproductions/fig10_convention_comparison.yaml
+  policy: Separate literature interpretation comparisons from decade sensitivity factors; no automatic denominator conversion.

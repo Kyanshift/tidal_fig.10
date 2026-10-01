@@ -1,0 +1,3 @@
+breathe
+numpydoc
+rebound>=3.10.0

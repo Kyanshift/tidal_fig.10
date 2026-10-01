@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tidal-fig10"
+version = "0.1.0"
+description = "Reproducible experiment records for K2-261 b orbital evolution research"
+requires-python = ">=3.12,<3.13"
+dependencies = ["PyYAML>=6.0,<7"]
+
+[project.scripts]
+k2-experiment = "k2_261b.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
